@@ -234,6 +234,7 @@
     </style>
   </head>
   <body>
+    <audio id="bgm" src="negoro.mp3" preload="auto"></audio>
     <div id="scene">
       <div id="dolly">
         <div id="tilt">
@@ -265,8 +266,6 @@
         'me.say("Rinduuu"){ attitude: "SAYANGGGGGGG" }',
         "//NEGORO ANGIN, -Denny Caknan-",
       ];
-      // detik mulai tiap baris (detik 0 = saat hitung mundur selesai).
-      // jumlahnya harus sama dengan jumlah LINES.
       let STARTS = [
         0.0, 4.01, 7.13, 10.22, 15.05, 17.22, 22.0, 25.21, 28.28, 33.2,
       ];
@@ -278,6 +277,7 @@
       const cam = document.getElementById("cam");
       const stage = document.getElementById("stage");
       const hint = document.getElementById("hint");
+      const bgm = document.getElementById("bgm");
       const esc = (s) =>
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -316,7 +316,6 @@
         });
       }
 
-      // kalau jumlah baris tidak sama dengan STARTS (mis. teks dari kotak tempel), bagi rata
       function getStarts() {
         if (STARTS.length === LINES.length) return STARTS;
         return LINES.map((_, i) => (i * END_AT * 0.95) / LINES.length);
@@ -328,12 +327,18 @@
         const id = ++run;
         const starts = getStarts();
         const els = [];
+        let audioStarted = false;
+
+        // Reset audio dan buka izin pemutaran di browser HP
+        bgm.pause();
+        bgm.currentTime = 0;
+        bgm.load();
+
         stage.innerHTML = "";
         hint.classList.remove("show");
         cam.classList.remove("pan");
         cam.style.transform = "translate(-50%,0)";
 
-        // baris baru muncul sedikit lebih awal supaya kamera sempat pindah
         const lead = (i) =>
           i ? Math.min(0.7, 0.15 * (starts[i] - starts[i - 1])) : 0;
 
@@ -348,6 +353,7 @@
         };
 
         const finish = () => {
+          bgm.pause();
           while (els.length < LINES.length) make(els.length);
           els.forEach((e, i) => {
             e.style.opacity = 0.95;
@@ -378,6 +384,12 @@
             hint.classList.add("show");
             return requestAnimationFrame(tick);
           }
+
+          if (!audioStarted) {
+            audioStarted = true;
+            bgm.play().catch(() => {});
+          }
+
           hint.classList.remove("show");
 
           while (
