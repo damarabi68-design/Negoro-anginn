@@ -234,7 +234,7 @@
     </style>
   </head>
   <body>
-    <audio id="bgm" src="negoro.mp3" preload="auto"></audio>
+    <audio id="bgm" src="./negoro.mp3" preload="auto" playsinline></audio>
     <div id="scene">
       <div id="dolly">
         <div id="tilt">
@@ -329,10 +329,19 @@
         const els = [];
         let audioStarted = false;
 
-        // Reset audio dan buka izin pemutaran di browser HP
-        bgm.pause();
+        // Pancing izin audio langsung saat jari menyentuh layar
         bgm.currentTime = 0;
-        bgm.load();
+        bgm.muted = true;
+        const p = bgm.play();
+        if (p !== undefined) {
+          p.then(() => {
+            bgm.pause();
+            bgm.currentTime = 0;
+            bgm.muted = false;
+          }).catch(() => {
+            bgm.muted = false;
+          });
+        }
 
         stage.innerHTML = "";
         hint.classList.remove("show");
@@ -387,7 +396,11 @@
 
           if (!audioStarted) {
             audioStarted = true;
-            bgm.play().catch(() => {});
+            bgm.muted = false;
+            bgm.play().catch((err) => {
+              hint.textContent = "Gagal memutar audio: " + err.message;
+              hint.classList.add("show");
+            });
           }
 
           hint.classList.remove("show");
